@@ -1,0 +1,19 @@
+{
+  "name": "messenger",
+  "version": "1.0.0",
+  "description": "Lab 2 — Messenger prototype (Variant 7: File Attachments)",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx/esm src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "vitest": {
+    "include": ["src/tests/**/*.test.ts"]
+  }
+}

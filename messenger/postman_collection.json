@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "Messenger API — Lab 2 (Variant 7)",
+    "_postman_id": "lab2-variant7-messenger",
+    "description": "API collection for the Messenger prototype from Lab 2. Variant 7: File Attachments.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000", "type": "string" },
+    { "key": "userAId",  "value": "", "type": "string" },
+    { "key": "userBId",  "value": "", "type": "string" },
+    { "key": "convId",   "value": "", "type": "string" },
+    { "key": "attachId", "value": "", "type": "string" },
+    { "key": "msgId",    "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User A (Alice)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('userAId', body.id);",
+                  "console.log('userAId =', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/users",
+            "body": { "mode": "raw", "raw": "{\"name\": \"Alice\"}" }
+          }
+        },
+        {
+          "name": "Create User B (Bob)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('userBId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/users",
+            "body": { "mode": "raw", "raw": "{\"name\": \"Bob\"}" }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/users"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Create Direct Conversation (A ↔ B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('convId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/conversations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\": \"direct\", \"participantIds\": [\"{{userAId}}\", \"{{userBId}}\"]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Send Text Message (A → B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('msgId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conversationId\": \"{{convId}}\", \"senderId\": \"{{userAId}}\", \"text\": \"Hello Bob!\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Conversation History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has messages', () => pm.expect(pm.response.json().length).to.be.greaterThan(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/conversations/{{convId}}/messages"
+          }
+        },
+        {
+          "name": "Mark Message Delivered",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/messages/{{msgId}}/delivered"
+          }
+        },
+        {
+          "name": "Mark Message Read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/messages/{{msgId}}/read"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments (Variant 7)",
+      "item": [
+        {
+          "name": "1. Request Upload Slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('attachId', body.attachmentId);",
+                  "pm.collectionVariables.set('uploadUrl', body.uploadUrl);",
+                  "console.log('Upload URL:', body.uploadUrl);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/attachments/upload-url",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"filename\": \"photo.jpg\", \"mimeType\": \"image/jpeg\", \"sizeBytes\": 204800}"
+            }
+          }
+        },
+        {
+          "name": "2. Upload File Bytes (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status SAFE', () => pm.expect(pm.response.json().scanStatus).to.eql('SAFE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/octet-stream" }],
+            "url": "{{base_url}}/attachments/{{attachId}}/upload",
+            "body": { "mode": "raw", "raw": "(binary file bytes here — use Postman binary body)" }
+          }
+        },
+        {
+          "name": "3. Get Presigned Download URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Has downloadUrl', () => pm.expect(pm.response.json().downloadUrl).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/attachments/{{attachId}}/url"
+          }
+        },
+        {
+          "name": "4. Send Message with Attachment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Has attachmentId', () => pm.expect(pm.response.json().attachmentId).to.eql(pm.collectionVariables.get('attachId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conversationId\": \"{{convId}}\", \"senderId\": \"{{userAId}}\", \"text\": \"Check this photo!\", \"attachmentId\": \"{{attachId}}\"}"
+            }
+          }
+        },
+        {
+          "name": "5. Download File",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/attachments/{{attachId}}/download"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "Empty user name → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/users",
+            "body": { "mode": "raw", "raw": "{\"name\": \"\"}" }
+          }
+        },
+        {
+          "name": "Message with no text or attachment → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conversationId\": \"{{convId}}\", \"senderId\": \"{{userAId}}\"}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
